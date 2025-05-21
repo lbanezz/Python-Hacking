@@ -5,31 +5,25 @@ from concurrent.futures import ThreadPoolExecutor
 import tkinter as tk
 from tkinter import messagebox
 
-# Fila para armazenar os resultados do scan
 result_queue = queue.Queue()
 
-# Função para verificar se uma porta está aberta e mostrar o serviço conhecido
 def scan_port(ip, port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.settimeout(0.3)
         result = s.connect_ex((ip, port))
-
         try:
             service = socket.getservbyport(port)
         except OSError:
             service = "Serviço desconhecido"
-
         status = "aberta" if result == 0 else "fechada"
         result_queue.put(f"Porta {port} está {status} - {service}\n")
 
-# Função principal para escanear as portas
 def scan_ip(ip, start_port, end_port):
     result_queue.put(f"Iniciando o scan no IP {ip} de {start_port} a {end_port}\n")
     with ThreadPoolExecutor(max_workers=300) as executor:
         for port in range(start_port, end_port + 1):
             executor.submit(scan_port, ip, port)
 
-# Função chamada ao clicar no botão
 def start_scan():
     ip = ip_entry.get()
     try:
@@ -43,7 +37,6 @@ def start_scan():
     except ValueError:
         messagebox.showerror("Erro", "Por favor, insira valores numéricos válidos para as portas.")
 
-# Atualiza o Text da interface com os resultados do scan
 def update_output():
     try:
         while True:
@@ -54,11 +47,9 @@ def update_output():
         pass
     root.after(100, update_output)
 
-# Interface gráfica
 root = tk.Tk()
 root.title("Scanner de Portas com Serviços")
 
-# Campos de entrada
 tk.Label(root, text="IP a ser escaneado:").grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
 ip_entry = tk.Entry(root, width=30)
 ip_entry.grid(row=0, column=1, padx=5, pady=5)
@@ -71,14 +62,11 @@ tk.Label(root, text="Porta final:").grid(row=2, column=0, padx=5, pady=5, sticky
 end_port_entry = tk.Entry(root, width=10)
 end_port_entry.grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
 
-# Botão
 scan_button = tk.Button(root, text="Iniciar Scan", command=start_scan)
 scan_button.grid(row=3, column=0, columnspan=2, pady=10)
 
-# Saída
 output_text = tk.Text(root, width=60, height=20)
 output_text.grid(row=4, column=0, columnspan=2, padx=5, pady=5)
 
-# Atualização contínua
 root.after(100, update_output)
 root.mainloop()
